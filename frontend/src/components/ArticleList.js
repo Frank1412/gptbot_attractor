@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Grid, Card, CardContent, CardMedia, Typography, CardActions, 
-  Button, Box, Chip, Stack, Divider, Avatar, Link 
+  Button, Box, Chip, Stack, Divider, Avatar, Link,
+  Table, TableBody, TableCell, TableHead, TableRow,
+  Paper, Accordion, AccordionSummary, AccordionDetails
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CodeIcon from '@mui/icons-material/Code';
+import SchoolIcon from '@mui/icons-material/School';
+import SpeedIcon from '@mui/icons-material/Speed';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import axios from 'axios';
 import SEOHead from './SEOHead';
 import ArticleStructuredData from './ArticleStructuredData';
+import { Helmet } from 'react-helmet';
 
 function ArticleList() {
   const [articles, setArticles] = useState([]);
@@ -32,6 +41,78 @@ function ArticleList() {
   }, []);
 
   // ... loading and error handling ...
+
+  const AIArticleStructuredData = ({ article }) => {
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "ScholarlyArticle",
+      "headline": article.title,
+      "author": {
+        "@type": "Person",
+        "name": article.author,
+        "jobTitle": article.authorRole
+      },
+      "description": article.content,
+      "keywords": article.tags.join(", "),
+      "about": {
+        "@type": "Thing",
+        "name": "Artificial Intelligence",
+        "description": "Research and applications of AI and machine learning"
+      },
+      "educationalLevel": "Advanced",
+      "genre": "Technical Documentation",
+      "abstract": article.content.split('\n')[0],
+      "citation": article.references.map(ref => ({
+        "@type": "CreativeWork",
+        "name": ref.title,
+        "url": ref.url
+      }))
+    };
+
+    return (
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+    );
+  };
+
+  const renderCodeExample = (example) => (
+    <Box sx={{ my: 2 }}>
+      <Typography variant="subtitle2" gutterBottom>
+        {example.description}
+      </Typography>
+      <SyntaxHighlighter 
+        language={example.language}
+        style={materialDark}
+        showLineNumbers
+      >
+        {example.code}
+      </SyntaxHighlighter>
+    </Box>
+  );
+
+  const renderBenchmarks = (benchmarks) => (
+    <Table size="small">
+      <TableHead>
+        <TableRow>
+          <TableCell>Metric</TableCell>
+          <TableCell>Value</TableCell>
+          <TableCell>Conditions</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {benchmarks.map((benchmark, index) => (
+          <TableRow key={index}>
+            <TableCell>{benchmark.metric}</TableCell>
+            <TableCell>{benchmark.value}</TableCell>
+            <TableCell>{benchmark.conditions}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
 
   return (
     <>
@@ -79,8 +160,10 @@ function ArticleList() {
             <Grid item xs={12} md={4} key={article.id}>
               <article 
                 itemScope 
-                itemType="https://schema.org/BlogPosting"
+                itemType="https://schema.org/TechArticle"
               >
+                <meta itemProp="isAccessibleForFree" content="true" />
+                <meta itemProp="isFamilyFriendly" content="true" />
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardMedia
                     component="img"
@@ -174,6 +257,32 @@ function ArticleList() {
                         {link.title}
                       </Link>
                     ))}
+                    <section itemProp="articleBody">
+                      {article.content.split('\n').map((paragraph, index) => (
+                        <Typography 
+                          key={index} 
+                          paragraph 
+                          sx={{ mb: 2 }}
+                          itemProp="text"
+                        >
+                          {paragraph}
+                        </Typography>
+                      ))}
+                    </section>
+                    {article.codeExamples && (
+                      <section>
+                        <Typography variant="h3" sx={{ fontSize: '1.2rem', mb: 2 }}>
+                          Code Examples
+                        </Typography>
+                        {article.codeExamples.map((example, index) => (
+                          <pre key={index}>
+                            <code className={`language-${example.language}`}>
+                              {example.code}
+                            </code>
+                          </pre>
+                        ))}
+                      </section>
+                    )}
                   </CardContent>
                   <CardActions>
                     <Button size="small" color="primary" variant="contained">
