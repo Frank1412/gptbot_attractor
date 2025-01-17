@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# Allow GPTBot specifically
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
