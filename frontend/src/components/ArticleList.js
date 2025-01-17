@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Grid, Card, CardContent, CardMedia, Typography, CardActions, 
-  Button, Box, Chip, Stack, Divider, Avatar, Link,
-  Table, TableBody, TableCell, TableHead, TableRow,
-  Paper, Accordion, AccordionSummary, AccordionDetails
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CodeIcon from '@mui/icons-material/Code';
-import SchoolIcon from '@mui/icons-material/School';
-import SpeedIcon from '@mui/icons-material/Speed';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import { Grid, Card, CardContent, CardMedia, Typography, CardActions, Button, Box, Avatar, Stack } from '@mui/material';
 import axios from 'axios';
 import SEOHead from './SEOHead';
 import ArticleStructuredData from './ArticleStructuredData';
@@ -22,12 +9,13 @@ function ArticleList() {
   const [articles, setArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const api = 'http://localhost:6001/api/articles';
+  
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('http://localhost:6001/api/articles');
+        const response = await axios.get(api);
         setArticles(response.data);
       } catch (err) {
         setError(err.message);
@@ -40,7 +28,21 @@ function ArticleList() {
     fetchArticles();
   }, []);
 
-  // ... loading and error handling ...
+  if (isLoading) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography>Loading articles...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4, color: 'error.main' }}>
+        <Typography>Error: {error}</Typography>
+      </Box>
+    );
+  }
 
   const AIArticleStructuredData = ({ article }) => {
     const structuredData = {
@@ -78,42 +80,6 @@ function ArticleList() {
     );
   };
 
-  const renderCodeExample = (example) => (
-    <Box sx={{ my: 2 }}>
-      <Typography variant="subtitle2" gutterBottom>
-        {example.description}
-      </Typography>
-      <SyntaxHighlighter 
-        language={example.language}
-        style={materialDark}
-        showLineNumbers
-      >
-        {example.code}
-      </SyntaxHighlighter>
-    </Box>
-  );
-
-  const renderBenchmarks = (benchmarks) => (
-    <Table size="small">
-      <TableHead>
-        <TableRow>
-          <TableCell>Metric</TableCell>
-          <TableCell>Value</TableCell>
-          <TableCell>Conditions</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {benchmarks.map((benchmark, index) => (
-          <TableRow key={index}>
-            <TableCell>{benchmark.metric}</TableCell>
-            <TableCell>{benchmark.value}</TableCell>
-            <TableCell>{benchmark.conditions}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-
   return (
     <>
       <SEOHead 
@@ -135,33 +101,18 @@ function ArticleList() {
         <Typography 
           variant="h1" 
           sx={{ 
-            fontSize: '2.5rem', 
-            mb: 1,
-            textAlign: 'center',
-            fontWeight: 'bold'
-          }}
-        >
-          Latest in Tech
-        </Typography>
-        
-        <Typography 
-          variant="subtitle1" 
-          sx={{ 
+            fontSize: '2rem', 
             mb: 4,
-            textAlign: 'center',
-            color: 'text.secondary'
+            textAlign: 'center'
           }}
         >
-          Expert insights on web development, AI, and software architecture
+          Latest Web Development Articles
         </Typography>
 
         <Grid container spacing={4}>
           {articles.map((article) => (
             <Grid item xs={12} md={4} key={article.id}>
-              <article 
-                itemScope 
-                itemType="https://schema.org/TechArticle"
-              >
+              <article itemScope itemType="https://schema.org/TechArticle">
                 <meta itemProp="isAccessibleForFree" content="true" />
                 <meta itemProp="isFamilyFriendly" content="true" />
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -173,12 +124,6 @@ function ArticleList() {
                     itemProp="image"
                   />
                   <CardContent sx={{ flexGrow: 1 }}>
-                    <Chip 
-                      label={article.category}
-                      color="primary"
-                      size="small"
-                      sx={{ mb: 2 }}
-                    />
                     <Typography 
                       variant="h2" 
                       component="h2"
@@ -215,81 +160,42 @@ function ArticleList() {
 
                     <meta itemProp="datePublished" content={article.date} />
                     
-                    <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                      <Stack direction="row" spacing={0.5} alignItems="center">
-                        <AccessTimeIcon sx={{ fontSize: 16 }} />
-                        <Typography variant="caption">{article.readTime}</Typography>
-                      </Stack>
-                      <Typography variant="caption">
-                        {new Date(article.date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </Typography>
-                    </Stack>
-
-                    <Box sx={{ mb: 2 }}>
-                      {article.tags.map((tag) => (
-                        <Chip
-                          key={tag}
-                          label={tag}
-                          size="small"
-                          sx={{ mr: 0.5, mb: 0.5 }}
-                        />
-                      ))}
-                    </Box>
-
-                    <Divider sx={{ my: 2 }} />
-                    
-                    <Typography variant="subtitle2" gutterBottom>
-                      Related Resources:
+                    <Typography variant="caption" display="block" sx={{ mt: 2 }}>
+                      By {article.author} on {new Date(article.date).toLocaleDateString()}
                     </Typography>
-                    {article.relatedLinks.map((link) => (
-                      <Link
-                        key={link.url}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        display="block"
-                        sx={{ mb: 0.5 }}
-                      >
-                        {link.title}
-                      </Link>
-                    ))}
-                    <section itemProp="articleBody">
-                      {article.content.split('\n').map((paragraph, index) => (
-                        <Typography 
-                          key={index} 
-                          paragraph 
-                          sx={{ mb: 2 }}
-                          itemProp="text"
-                        >
-                          {paragraph}
-                        </Typography>
-                      ))}
-                    </section>
-                    {article.codeExamples && (
-                      <section>
-                        <Typography variant="h3" sx={{ fontSize: '1.2rem', mb: 2 }}>
-                          Code Examples
-                        </Typography>
-                        {article.codeExamples.map((example, index) => (
-                          <pre key={index}>
-                            <code className={`language-${example.language}`}>
-                              {example.code}
-                            </code>
-                          </pre>
-                        ))}
-                      </section>
-                    )}
                   </CardContent>
                   <CardActions>
-                    <Button size="small" color="primary" variant="contained">
-                      Read Full Article
+                    <Button size="small" color="primary">
+                      Read More
                     </Button>
                   </CardActions>
                 </Card>
+                <section itemProp="articleBody">
+                  {article.content.split('\n').map((paragraph, index) => (
+                    <Typography 
+                      key={index} 
+                      paragraph 
+                      sx={{ mb: 2 }}
+                      itemProp="text"
+                    >
+                      {paragraph}
+                    </Typography>
+                  ))}
+                </section>
+                {article.codeExamples && (
+                  <section>
+                    <Typography variant="h3" sx={{ fontSize: '1.2rem', mb: 2 }}>
+                      Code Examples
+                    </Typography>
+                    {article.codeExamples.map((example, index) => (
+                      <pre key={index}>
+                        <code className={`language-${example.language}`}>
+                          {example.code}
+                        </code>
+                      </pre>
+                    ))}
+                  </section>
+                )}
               </article>
             </Grid>
           ))}
